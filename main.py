@@ -3,6 +3,9 @@ import re
 
 import requests
 from bs4 import BeautifulSoup
+from googletrans import Translator
+
+translator = Translator()
 
 main_url = "https://www.kleinanzeigen.de"
 base_url = "https://www.kleinanzeigen.de/s-haus-garten/c80"
@@ -43,22 +46,26 @@ def spider(urls):
         for el in content:
             result = {}
             title_art = el.find('h1', attrs={"id": "viewad-title"}).text.lstrip()
+            title_art_ua = translator.translate(title_art, dest='uk')
             price_art = el.find('h2', attrs={"id": "viewad-price"}).text.lstrip()
             location_art = el.find('span', attrs={"id": "viewad-locality"}).text.lstrip()
             data_art = el.find('div', attrs={"id": "viewad-extra-info"}).find('span').text
             # Beschreibung -
             description = el.find('p', attrs={"id": "viewad-description-text"}).text.lstrip()
+            description_ua = translator.translate(description, dest='uk')
 
             result.update({'url': url,
-                           'title': title_art,
+                           'title DE': title_art,
+                           'title UA': title_art_ua.text,
                            'price': price_art,
                            'location': location_art,
                            'data': data_art,
-                           'descritpion': description}
+                           'descritpion DE': description,
+                           'descritpion UA': description_ua.text}
                           )
 
             data.append(result)
-    # print(data)
+
     return data
 
 
@@ -67,6 +74,6 @@ if __name__ == '__main__':
     url_for_scraping = get_urls()
     # print(url_for_scraping)
     r = spider(url_for_scraping)
-    with open('enemy.json', 'w', encoding='utf-8') as fd:
+    with open('content.json', 'w', encoding='utf-8') as fd:
         json.dump(r, fd, ensure_ascii=False)
 
